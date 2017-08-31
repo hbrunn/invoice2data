@@ -214,7 +214,7 @@ class InvoiceTemplate(OrderedDict):
                     if current_row:
                         lines.append(current_row)
                     current_row = {
-                        field: (value or '').strip()
+                        field: value.strip()
                         for field, value in match.groupdict().iteritems()
                     }
                     continue
