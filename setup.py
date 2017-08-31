@@ -5,7 +5,7 @@ import sys
 
 setup(
     name='invoice2data',
-    version='0.2.53',
+    version='0.2.60',
     author='Manuel Riel',
     author_email='github@snapdragon.cc',
     url='https://github.com/m3nu/invoice2data',
@@ -15,6 +15,7 @@ setup(
     package_data = {
         'invoice2data': [
             'templates/*.yml',
+            'templates/es/*.yml',
             'templates/fr/*.yml',
             'templates/nl/*.yml',
             'templates/ch/*.yml'],

@@ -1,5 +1,5 @@
 """
-This module abstracts templates for invoice providers. 
+This module abstracts templates for invoice providers.
 
 Templates are initially read from .yml files and then kept as class.
 """
@@ -33,7 +33,7 @@ def read_templates(folder):
     """
     output = []
     for path, subdirs, files in os.walk(folder):
-        for name in files:
+        for name in sorted(files):
             if name.endswith('.yml'):
                 tpl = ordered_load(open(os.path.join(path, name)).read())
                 tpl['template_name'] = name
@@ -43,7 +43,7 @@ def read_templates(folder):
                 required_fields = ['date', 'amount', 'invoice_number']
                 assert len(set(required_fields).intersection(tpl['fields'].keys())) == len(required_fields), \
                     'Missing required key in template {} {}. Found {}'.format(name, path, tpl['fields'].keys())
-                
+
                 # Keywords as list, if only one.
                 if type(tpl['keywords']) is not list:
                     tpl['keywords'] = [tpl['keywords']]
@@ -88,10 +88,14 @@ class InvoiceTemplate(OrderedDict):
             optimized_str = re.sub(' +', '', extracted_str)
         else:
             optimized_str = extracted_str
-        
+
         # Remove accents
         if self.options['remove_accents']:
             optimized_str = unidecode(optimized_str)
+
+        # convert to lower case
+        if self.options['lowercase']:
+            optimized_str = optimized_str.lower()
 
         # specific replace
         for replace in self.options['replace']:
@@ -146,6 +150,8 @@ class InvoiceTemplate(OrderedDict):
 
         # Try to find data for each field.
         output = {}
+        output['issuer'] = self['issuer']
+        
         for k, v in self['fields'].items():
             if k.startswith('static_'):
                 logger.debug("field=%s | static value=%s", k, v)
@@ -185,7 +191,7 @@ class InvoiceTemplate(OrderedDict):
 
         output['currency'] = self.options['currency']
 
-        if len(output.keys()) >= 4:
+        if len(output.keys()) >= 5:
             output['desc'] = 'Invoice %s from %s' % (
                 output['invoice_number'], self['issuer'])
             logger.debug(output)
@@ -215,13 +221,13 @@ class InvoiceTemplate(OrderedDict):
                         lines.append(current_row)
                     current_row = {
                         field: value.strip()
-                        for field, value in match.groupdict().iteritems()
+                        for field, value in match.groupdict().items()
                     }
                     continue
             if 'last_line' in self['lines']:
                 match = re.search(self['lines']['last_line'], line)
                 if match:
-                    for field, value in match.groupdict().iteritems():
+                    for field, value in match.groupdict().items():
                         current_row[field] = '%s%s%s' % (
                             current_row.get(field, ''),
                             current_row.get(field, '') and '\n' or '',
@@ -232,7 +238,7 @@ class InvoiceTemplate(OrderedDict):
                     continue
             match = re.search(self['lines']['line'], line)
             if match:
-                for field, value in match.groupdict().iteritems():
+                for field, value in match.groupdict().items():
                     current_row[field] = '%s%s%s' % (
                         current_row.get(field, ''),
                         current_row.get(field, '') and '\n' or '',
